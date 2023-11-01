@@ -1,18 +1,17 @@
 package com.ajousw.spring.domain.member.repository;
 
+import com.ajousw.spring.domain.alarm.repository.Alarm;
 import com.ajousw.spring.domain.member.enums.LoginType;
 import com.ajousw.spring.domain.member.enums.Role;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import java.time.LocalDateTime;
+import com.ajousw.spring.domain.timetable.repository.TimeTable;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Entity
@@ -42,12 +41,15 @@ public class Member extends BaseTimeEntity {
 
     private LocalDateTime lastLoginTime;
 
-//    @Builder
-//    public Member(String email, String username, Role role) {
-//        this.email = email;
-//        this.username = username;
-//        this.role = role;
-//    }
+    @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
+    private TimeTable timeTable;
+
+    @OneToMany(mappedBy = "member")
+    private List<Alarm> alarmList = new ArrayList<>();
+
+    public void setTimeTable(TimeTable timeTable) {
+        this.timeTable = timeTable;
+    }
 
     public void updateLastLoginTime() {
         this.lastLoginTime = LocalDateTime.now();
