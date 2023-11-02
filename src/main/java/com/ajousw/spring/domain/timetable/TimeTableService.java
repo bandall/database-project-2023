@@ -7,10 +7,7 @@ import com.ajousw.spring.domain.timetable.parser.ClassTime;
 import com.ajousw.spring.domain.timetable.parser.SubjectParse;
 import com.ajousw.spring.domain.timetable.parser.TableInfo;
 import com.ajousw.spring.domain.timetable.parser.TableParse;
-import com.ajousw.spring.domain.timetable.repository.Subject;
-import com.ajousw.spring.domain.timetable.repository.SubjectTime;
-import com.ajousw.spring.domain.timetable.repository.TimeTable;
-import com.ajousw.spring.domain.timetable.repository.TimeTableRepository;
+import com.ajousw.spring.domain.timetable.repository.*;
 import com.ajousw.spring.web.controller.dto.timetable.SubjectDto;
 import com.ajousw.spring.web.controller.dto.timetable.SubjectTimeDto;
 import com.ajousw.spring.web.controller.dto.timetable.TimeTableDto;
@@ -34,8 +31,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TimeTableService {
 
-    private final MemberRepository memberJpaRepository;
+    private final MemberRepository memberRepository;
     private final TimeTableRepository timeTableRepository;
+    private final SubjectRepository subjectRepository;
     private WebClient webClient;
     private XmlMapper xmlMapper;
 
@@ -47,7 +45,7 @@ public class TimeTableService {
 
     public void saveTimeTable(String identifier, String userEmail) {
         String param = "?identifier=" + identifier + "&friendInfo=true";
-        ResponseEntity<String> response = null;
+        ResponseEntity<String> response;
         try {
             response = webClient.post()
                     .uri("https://api.everytime.kr/find/timetable/table/friend" + param)
@@ -60,25 +58,28 @@ public class TimeTableService {
             throw new EverytimeParsingException("에브리타임 API 사용 중 오류가 발생했습니다", e);
         }
 
-        Member member = memberJpaRepository.findByEmail(userEmail).orElseThrow(() ->
+        Member member = memberRepository.findByEmail(userEmail).orElseThrow(() ->
                 new IllegalArgumentException("존재하지 않는 유저입니다"));
 
         TimeTable timeTable = parseTimeTable(response.getBody(), member);
+        timeTableRepository.deleteByMember(member);
         timeTableRepository.save(timeTable);
     }
 
+    // Member 테이블에 TimeTable 클래스가 이미 있음
     public TimeTableDto getTimeTable(String email) {
-        Member member = memberJpaRepository.findByEmail(email).orElseThrow(() ->
+        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
                 new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        TimeTable timeTable = timeTableRepository.findByMember(member).orElseThrow(() ->
-                new IllegalArgumentException("존재하지 않는 테이블입니다."));
+        if (member.getTimeTable() == null) {
+            throw new IllegalArgumentException("등록된 테이블이 없습니다.");
+        }
 
-        return convertToDto(timeTable);
+        return createDto(member.getTimeTable());
     }
 
     public void deleteTimeTable(String email) {
-        Member member = memberJpaRepository.findByEmail(email).orElseThrow(() ->
+        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
                 new IllegalArgumentException("존재하지 않는 유저입니다."));
 
         timeTableRepository.deleteByMember(member);
@@ -116,7 +117,7 @@ public class TimeTableService {
     private Subject setSubject(SubjectParse subjectParse, TimeTable timeTable) {
         Subject subject = Subject.builder()
                 .timeTable(timeTable)
-                .subjectRealId(Long.valueOf(subjectParse.getId()))
+                .subjectRealId(subjectParse.getId())
                 .name(subjectParse.getName())
                 .code(subjectParse.getInternal())
                 .professor(subjectParse.getProfessor())
@@ -141,8 +142,10 @@ public class TimeTableService {
         return subjectTime;
     }
 
-    private TimeTableDto convertToDto(TimeTable timeTableEntity) {
-        List<SubjectDto> subjectDtoList = timeTableEntity.getSubjectList().stream()
+    private TimeTableDto createDto(TimeTable timeTableEntity) {
+        List<Subject> subjectList = subjectRepository.findAllByTimeTableFetch(timeTableEntity.getTableId());
+
+        List<SubjectDto> subjectDtoList = subjectList.stream()
                 .map(subject -> new SubjectDto(
                         subject.getSubjectId(),
                         subject.getSubjectRealId(),

@@ -2,14 +2,15 @@ package com.ajousw.spring.domain.timetable.parser;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import java.util.List;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SubjectParse {
     @JacksonXmlProperty(isAttribute = true)
-    private int id;
+    private Long id;
 
     @JacksonXmlProperty(localName = "internal")
     private Internal internal;
