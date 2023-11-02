@@ -2,7 +2,7 @@ package com.ajousw.spring.web.controller;
 
 import com.ajousw.spring.domain.member.security.UserPrinciple;
 import com.ajousw.spring.domain.timetable.TimeTableService;
-import com.ajousw.spring.web.controller.dto.TimeTable.TimeTableDto;
+import com.ajousw.spring.web.controller.dto.timetable.TimeTableDto;
 import com.ajousw.spring.web.controller.json.ApiResponseJson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

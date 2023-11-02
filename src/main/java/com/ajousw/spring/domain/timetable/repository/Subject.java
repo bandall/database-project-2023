@@ -1,6 +1,5 @@
 package com.ajousw.spring.domain.timetable.repository;
 
-import com.ajousw.spring.domain.member.repository.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,7 +12,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Subject extends BaseTimeEntity {
+public class Subject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
