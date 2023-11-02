@@ -1,4 +1,4 @@
-package com.ajousw.spring.web.controller.dto.TimeTable;
+package com.ajousw.spring.web.controller.dto.timetable;
 
 import lombok.Builder;
 import lombok.Data;

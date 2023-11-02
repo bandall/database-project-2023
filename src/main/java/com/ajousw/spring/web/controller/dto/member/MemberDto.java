@@ -1,4 +1,4 @@
-package com.ajousw.spring.web.controller.dto.Member;
+package com.ajousw.spring.web.controller.dto.member;
 
 import com.ajousw.spring.domain.member.enums.LoginType;
 import lombok.AccessLevel;
