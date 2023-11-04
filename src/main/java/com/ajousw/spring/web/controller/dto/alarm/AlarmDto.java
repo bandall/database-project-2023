@@ -1,5 +1,6 @@
 package com.ajousw.spring.web.controller.dto.alarm;
 
+import com.ajousw.spring.web.controller.dto.timetable.SubjectDto;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,13 +9,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AlarmSubjectDto {
+public class AlarmDto {
 
     private Long alarmId;
 
     private Long memberId;
-
-    private Long subjectId;
 
     private Long day;
 
@@ -26,11 +25,5 @@ public class AlarmSubjectDto {
 
     private Boolean isAlarmOn;
 
-    private Long subjectRealId;
-
-    private String code;
-
-    private String name;
-
-    private String professor;
+    private SubjectDto subjectDto;
 }

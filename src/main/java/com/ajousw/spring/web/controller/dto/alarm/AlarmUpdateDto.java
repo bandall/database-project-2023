@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AlarmModifyDto {
+public class AlarmUpdateDto {
 
     private Long alarmId;
 
