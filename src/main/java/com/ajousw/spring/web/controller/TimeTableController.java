@@ -33,7 +33,7 @@ public class TimeTableController {
     }
 
     @GetMapping("/timetable")
-    public ApiResponseJson save(@AuthenticationPrincipal UserPrinciple user) {
+    public ApiResponseJson get(@AuthenticationPrincipal UserPrinciple user) {
         TimeTableDto timeTable = timeTableService.getTimeTable(user.getEmail());
         return new ApiResponseJson(HttpStatus.OK, timeTable);
     }
