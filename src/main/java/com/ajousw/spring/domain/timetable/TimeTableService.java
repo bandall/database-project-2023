@@ -37,6 +37,7 @@ public class TimeTableService {
     private final EveryTimeApi everyTimeApi;
     private final EveryTimeParser everyTimeParser;
     private final EntityManager entityManager;
+    private final AlarmSetter alarmSetter;
 
 
     public void saveTimeTable(String identifier, String userEmail) {
@@ -50,6 +51,7 @@ public class TimeTableService {
         List<Subject> subjects = everyTimeParser.getSubject(tableInfo, timeTable);
 
         saveTimeTable(timeTable, subjects);
+        alarmSetter.createAlarmWithSubject(subjects, member);
     }
 
     private void deleteTimeTable(Member member) {
@@ -65,6 +67,7 @@ public class TimeTableService {
         }
 
         subjectTimeRepository.deleteAllInBatch(subjectTimes);
+        alarmSetter.deleteAlarmWithMember(member);
         subjectRepository.deleteAllInBatch(allSubjects);
         timeTableRepository.delete(timeTable);
         entityManager.flush();
