@@ -60,7 +60,7 @@ public class TableJoinService {
 
     private List<Subject> getSubjects(Member member) {
         List<Subject> subjects = subjectRepository.findAllByTimeTableFetch(
-                member.getTimeTable().getTableId());
+                member.getTimeTable());
         return subjects == null ? Collections.emptyList() : subjects;
     }
 

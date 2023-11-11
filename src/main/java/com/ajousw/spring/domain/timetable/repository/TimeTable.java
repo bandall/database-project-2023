@@ -2,14 +2,17 @@ package com.ajousw.spring.domain.timetable.repository;
 
 import com.ajousw.spring.domain.member.repository.BaseTimeEntity;
 import com.ajousw.spring.domain.member.repository.Member;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -30,9 +33,6 @@ public class TimeTable extends BaseTimeEntity {
 
     private String identifier;
 
-    @OneToMany(mappedBy = "timeTable", cascade = CascadeType.ALL)
-    private List<Subject> subjectList = new ArrayList<>();
-
     @Builder
     public TimeTable(Member member, String year, String semester, String identifier) {
         this.member = member;
@@ -40,8 +40,5 @@ public class TimeTable extends BaseTimeEntity {
         this.semester = semester;
         this.identifier = identifier;
     }
-
-    public void addSubject(Subject subject) {
-        subjectList.add(subject);
-    }
+    
 }

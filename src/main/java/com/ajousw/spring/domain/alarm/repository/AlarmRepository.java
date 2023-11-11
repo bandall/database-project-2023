@@ -1,5 +1,6 @@
 package com.ajousw.spring.domain.alarm.repository;
 
+import com.ajousw.spring.domain.member.repository.Member;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,4 +17,5 @@ public interface AlarmRepository extends JpaRepository<Alarm, Long> {
 
     void deleteById(Long id);
 
+    void deleteByMember(Member member);
 }
