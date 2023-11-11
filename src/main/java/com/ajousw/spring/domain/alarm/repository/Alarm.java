@@ -59,6 +59,6 @@ public class Alarm {
     }
 
     public void setAlarmOn(Boolean alarmOn) {
-        isAlarmOn = alarmOn;
+        this.isAlarmOn = alarmOn;
     }
 }

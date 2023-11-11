@@ -1,5 +1,6 @@
 package com.ajousw.spring.domain.alarm;
 
+import com.ajousw.spring.domain.ErrorMessage;
 import com.ajousw.spring.domain.alarm.repository.Alarm;
 import com.ajousw.spring.domain.alarm.repository.AlarmRepository;
 import com.ajousw.spring.domain.member.repository.Member;
@@ -12,6 +13,7 @@ import com.ajousw.spring.web.controller.dto.alarm.AlarmDto;
 import com.ajousw.spring.web.controller.dto.alarm.AlarmUpdateDto;
 import com.ajousw.spring.web.controller.dto.timetable.SubjectDto;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +31,10 @@ public class AlarmService {
 
     public void save(AlarmCreateDto alarmCreateDto, String email) {
         Member member = memberRepository.findByEmail(email).orElseThrow(() ->
-                new IllegalArgumentException("존재하지 않는 유저입니다."));
+                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
 
         Subject subject = subjectRepository.findById(alarmCreateDto.getSubjectId()).orElseThrow(() ->
-                new IllegalArgumentException("존재하지 않는 과목입니다."));
+                new IllegalArgumentException(ErrorMessage.SUBJECT_NOT_FOUND));
 
         Alarm newAlarm = Alarm.builder()
                 .member(member)
@@ -50,30 +52,30 @@ public class AlarmService {
     public List<AlarmDto> getAllAlarmByEmail(String email) {
         List<Alarm> alarm = alarmRepository.findByMemberEmailFetch(email);
 
-        return alarm.stream().map(a -> getAlarmSubjectDto(a))
+        return alarm.stream().map(this::getAlarmSubjectDto)
                 .collect(Collectors.toList());
     }
 
     public AlarmDto getAlarmById(Long id) {
         Alarm alarm = alarmRepository.findByIdFetch(id).orElseThrow(() ->
-                new IllegalArgumentException("존재하지 않는 알람입니다."));
+                new IllegalArgumentException(ErrorMessage.ALARM_NOT_FOUND));
 
         return getAlarmSubjectDto(alarm);
     }
 
     public void updateAlarm(AlarmUpdateDto alarmModifyDto, String email) {
         Alarm alarm = alarmRepository.findByIdFetch(alarmModifyDto.getAlarmId()).orElseThrow(() ->
-                new IllegalArgumentException("존재하지 않는 알람입니다."));
+                new IllegalArgumentException(ErrorMessage.ALARM_NOT_FOUND));
 
         checkOwner(email, alarm);
 
         alarm.setAlarmOn(alarmModifyDto.getIsAlarmOn());
-        alarm.setAlarmGap(alarm.getAlarmGap());
+        alarm.setAlarmGap(alarmModifyDto.getAlarmGap());
     }
 
     public void deleteAlarm(AlarmDeleteDto alarmDeleteDto, String email) {
         Alarm alarm = alarmRepository.findByIdFetch(alarmDeleteDto.getAlarmId()).orElseThrow(() ->
-                new IllegalArgumentException("존재하지 않는 알람입니다."));
+                new IllegalArgumentException(ErrorMessage.ALARM_NOT_FOUND));
 
         checkOwner(email, alarm);
 
@@ -82,10 +84,10 @@ public class AlarmService {
 
     private void checkOwner(String email, Alarm alarm) {
         Member member = memberRepository.findByEmail(email).orElseThrow(() ->
-                new IllegalArgumentException("존재하지 않는 유저입니다."));
+                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
 
-        if (alarm.getMember().getId() != member.getId()) {
-            throw new IllegalArgumentException("알람은 본인만 삭제할 수 있습니다.");
+        if (!Objects.equals(alarm.getMember().getId(), member.getId())) {
+            throw new IllegalArgumentException(ErrorMessage.NOT_OWNER);
         }
     }
 
