@@ -30,17 +30,22 @@ public class AlarmService {
     private final MemberRepository memberRepository;
 
     public void save(AlarmCreateDto alarmCreateDto, String email) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
+                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
+
+        if (member.getTimeTable() == null) {
+            throw new IllegalStateException(ErrorMessage.TIMETABLE_NOT_FOUND);
+        }
+
         if (alarmCreateDto.getSubjectId() == -1) {
-            saveWithNewSubject(alarmCreateDto, email);
+            saveWithNewSubject(alarmCreateDto, member);
             return;
         }
 
-        saveWithSubject(alarmCreateDto, email);
+        saveWithSubject(alarmCreateDto, member);
     }
 
-    private void saveWithSubject(AlarmCreateDto alarmCreateDto, String email) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
-                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
+    private void saveWithSubject(AlarmCreateDto alarmCreateDto, Member member) {
 
         Subject subject = subjectRepository.findById(alarmCreateDto.getSubjectId()).orElseThrow(() ->
                 new IllegalArgumentException(ErrorMessage.SUBJECT_NOT_FOUND));
@@ -58,15 +63,12 @@ public class AlarmService {
         alarmRepository.save(newAlarm);
     }
 
-    private void saveWithNewSubject(AlarmCreateDto alarmCreateDto, String email) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
-                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
-
+    private void saveWithNewSubject(AlarmCreateDto alarmCreateDto, Member member) {
         Subject customSubject = Subject.builder()
                 .subjectRealId(0L)
                 .code("CUSTOM_SUBJECT")
                 .name(alarmCreateDto.getName())
-                .professor(email)
+                .professor(member.getEmail())
                 .timeTable(member.getTimeTable())
                 .build();
 
