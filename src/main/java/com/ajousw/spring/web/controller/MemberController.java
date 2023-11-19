@@ -17,7 +17,6 @@ public class MemberController {
 
     private final MemberService memberService;
 
-
     @GetMapping("/userinfo")
     public MemberDto home(@AuthenticationPrincipal UserPrinciple user) {
         Member member = memberService.getMember(user.getEmail());

@@ -9,6 +9,7 @@ import com.ajousw.spring.web.controller.dto.alarm.AlarmUpdateDto;
 import com.ajousw.spring.web.controller.json.ApiResponseJson;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -65,7 +66,7 @@ public class AlarmController {
         List<AlarmDto> alarms = alarmService.getAllAlarmByEmail(user.getEmail());
 
         log.info("[SUCCESS]");
-        return new ApiResponseJson(HttpStatus.OK, alarms);
+        return new ApiResponseJson(HttpStatus.OK, Map.of("alarms", alarms));
     }
 
 }

@@ -30,6 +30,15 @@ public class AlarmService {
     private final MemberRepository memberRepository;
 
     public void save(AlarmCreateDto alarmCreateDto, String email) {
+        if (alarmCreateDto.getSubjectId() == -1) {
+            saveWithNewSubject(alarmCreateDto, email);
+            return;
+        }
+
+        saveWithSubject(alarmCreateDto, email);
+    }
+
+    private void saveWithSubject(AlarmCreateDto alarmCreateDto, String email) {
         Member member = memberRepository.findByEmail(email).orElseThrow(() ->
                 new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
 
@@ -39,6 +48,33 @@ public class AlarmService {
         Alarm newAlarm = Alarm.builder()
                 .member(member)
                 .subject(subject)
+                .day(alarmCreateDto.getDay())
+                .hour(alarmCreateDto.getHour())
+                .minute(alarmCreateDto.getMinute())
+                .alarmGap(alarmCreateDto.getAlarmGap())
+                .isAlarmOn(alarmCreateDto.getIsAlarmOn())
+                .build();
+
+        alarmRepository.save(newAlarm);
+    }
+
+    private void saveWithNewSubject(AlarmCreateDto alarmCreateDto, String email) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
+                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
+
+        Subject customSubject = Subject.builder()
+                .subjectRealId(0L)
+                .code("CUSTOM_SUBJECT")
+                .name(alarmCreateDto.getName())
+                .professor(email)
+                .timeTable(member.getTimeTable())
+                .build();
+
+        subjectRepository.save(customSubject);
+
+        Alarm newAlarm = Alarm.builder()
+                .member(member)
+                .subject(customSubject)
                 .day(alarmCreateDto.getDay())
                 .hour(alarmCreateDto.getHour())
                 .minute(alarmCreateDto.getMinute())

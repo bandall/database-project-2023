@@ -14,6 +14,8 @@ public class AlarmCreateDto {
     @NotNull
     private Long subjectId;
 
+    private String name;
+
     @NotNull
     private Long day;
 
