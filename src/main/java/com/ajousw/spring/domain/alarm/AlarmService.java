@@ -12,13 +12,14 @@ import com.ajousw.spring.web.controller.dto.alarm.AlarmDeleteDto;
 import com.ajousw.spring.web.controller.dto.alarm.AlarmDto;
 import com.ajousw.spring.web.controller.dto.alarm.AlarmUpdateDto;
 import com.ajousw.spring.web.controller.dto.timetable.SubjectDto;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -65,7 +66,7 @@ public class AlarmService {
 
     private void saveWithNewSubject(AlarmCreateDto alarmCreateDto, Member member) {
         Subject customSubject = Subject.builder()
-                .subjectRealId(0L)
+                .everyTimeSubjectId(0L)
                 .code("CUSTOM_SUBJECT")
                 .name(alarmCreateDto.getName())
                 .professor(member.getEmail())
@@ -142,7 +143,7 @@ public class AlarmService {
                 alarm.getAlarmGap(),
                 alarm.getIsAlarmOn(),
                 new SubjectDto(subject.getSubjectId(),
-                        subject.getSubjectRealId(),
+                        subject.getEveryTimeSubjectId(),
                         subject.getCode(),
                         subject.getName(),
                         subject.getProfessor(),

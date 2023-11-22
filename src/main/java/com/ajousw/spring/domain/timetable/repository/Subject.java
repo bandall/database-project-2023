@@ -18,7 +18,7 @@ public class Subject {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long subjectId;
 
-    private Long subjectRealId;
+    private Long everyTimeSubjectId;
 
     private String code;
 
@@ -34,9 +34,9 @@ public class Subject {
     private List<SubjectTime> subjectTimes = new ArrayList<>();
 
     @Builder
-    public Subject(TimeTable timeTable, Long subjectRealId, String code, String name, String professor) {
+    public Subject(TimeTable timeTable, Long everyTimeSubjectId, String code, String name, String professor) {
         this.timeTable = timeTable;
-        this.subjectRealId = subjectRealId;
+        this.everyTimeSubjectId = everyTimeSubjectId;
         this.code = code;
         this.name = name;
         this.professor = professor;

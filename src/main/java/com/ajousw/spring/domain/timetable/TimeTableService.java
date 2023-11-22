@@ -6,23 +6,19 @@ import com.ajousw.spring.domain.member.repository.MemberRepository;
 import com.ajousw.spring.domain.timetable.everytime.EveryTimeApi;
 import com.ajousw.spring.domain.timetable.everytime.EveryTimeParser;
 import com.ajousw.spring.domain.timetable.parser.TableInfo;
-import com.ajousw.spring.domain.timetable.repository.Subject;
-import com.ajousw.spring.domain.timetable.repository.SubjectRepository;
-import com.ajousw.spring.domain.timetable.repository.SubjectTime;
-import com.ajousw.spring.domain.timetable.repository.SubjectTimeRepository;
-import com.ajousw.spring.domain.timetable.repository.TimeTable;
-import com.ajousw.spring.domain.timetable.repository.TimeTableRepository;
+import com.ajousw.spring.domain.timetable.repository.*;
 import com.ajousw.spring.web.controller.dto.timetable.SubjectDto;
 import com.ajousw.spring.web.controller.dto.timetable.SubjectTimeDto;
 import com.ajousw.spring.web.controller.dto.timetable.TimeTableDto;
 import jakarta.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,10 +35,8 @@ public class TimeTableService {
     private final EntityManager entityManager;
     private final AlarmSetter alarmSetter;
 
-
     public void saveTimeTable(String identifier, String userEmail) {
-        Member member = memberRepository.findByEmail(userEmail).orElseThrow(() ->
-                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
+        Member member = findMemberByEmail(userEmail);
 
         deleteTimeTable(member);
 
@@ -61,7 +55,7 @@ public class TimeTableService {
         }
 
         List<SubjectTime> subjectTimes = new ArrayList<>();
-        List<Subject> allSubjects = subjectRepository.findAllByTimeTableFetch(timeTable);
+        List<Subject> allSubjects = subjectRepository.findAllByTimeTableFetchSubjectTimes(timeTable);
         for (Subject subject : allSubjects) {
             subjectTimes.addAll(subject.getSubjectTimes());
         }
@@ -79,8 +73,7 @@ public class TimeTableService {
     }
 
     public TimeTableDto getTimeTable(String email) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
-                new IllegalArgumentException(ErrorMessage.TIMETABLE_NOT_FOUND));
+        Member member = findMemberByEmail(email);
 
         if (member.getTimeTable() == null) {
             throw new IllegalArgumentException(ErrorMessage.TIMETABLE_NOT_FOUND);
@@ -90,19 +83,22 @@ public class TimeTableService {
     }
 
     public void deleteTimeTable(String email) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
-                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
-
+        Member member = findMemberByEmail(email);
         deleteTimeTable(member);
     }
 
+    private Member findMemberByEmail(String userEmail) {
+        return memberRepository.findByEmail(userEmail).orElseThrow(() ->
+                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
+    }
+
     private TimeTableDto createDto(TimeTable timeTableEntity) {
-        List<Subject> subjectList = subjectRepository.findAllByTimeTableFetch(timeTableEntity);
+        List<Subject> subjectList = subjectRepository.findAllByTimeTableFetchSubjectTimes(timeTableEntity);
 
         List<SubjectDto> subjectDtoList = subjectList.stream()
                 .map(subject -> new SubjectDto(
                         subject.getSubjectId(),
-                        subject.getSubjectRealId(),
+                        subject.getEveryTimeSubjectId(),
                         subject.getCode(),
                         subject.getName(),
                         subject.getProfessor(),

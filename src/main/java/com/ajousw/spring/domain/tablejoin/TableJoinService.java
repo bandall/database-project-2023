@@ -6,14 +6,11 @@ import com.ajousw.spring.domain.timetable.repository.Subject;
 import com.ajousw.spring.domain.timetable.repository.SubjectRepository;
 import com.ajousw.spring.web.controller.dto.timetable.CommonEmptyTimeDto;
 import jakarta.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.*;
 
 @Slf4j
 @Service
@@ -59,7 +56,7 @@ public class TableJoinService {
     }
 
     private List<Subject> getSubjects(Member member) {
-        List<Subject> subjects = subjectRepository.findAllByTimeTableFetch(
+        List<Subject> subjects = subjectRepository.findAllByTimeTableFetchSubjectTimes(
                 member.getTimeTable());
         return subjects == null ? Collections.emptyList() : subjects;
     }
