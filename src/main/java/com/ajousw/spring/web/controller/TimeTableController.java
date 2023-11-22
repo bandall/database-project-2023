@@ -22,13 +22,13 @@ public class TimeTableController {
 
     @GetMapping("/timetable/save")
     public ApiResponseJson save(@Param("identifier") String identifier, @AuthenticationPrincipal UserPrinciple user) {
-        timeTableService.saveTimeTable(identifier, user.getEmail());
+        timeTableService.saveTimeTableAndSubject(identifier, user.getEmail());
         return new ApiResponseJson(HttpStatus.OK, "done");
     }
 
     @PostMapping("/timetable/delete")
     public ApiResponseJson delete(@AuthenticationPrincipal UserPrinciple user) {
-        timeTableService.deleteTimeTable(user.getEmail());
+        timeTableService.deleteTimeTableAndSubject(user.getEmail());
         return new ApiResponseJson(HttpStatus.OK, "done");
     }
 

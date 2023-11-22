@@ -6,19 +6,24 @@ import com.ajousw.spring.domain.member.repository.MemberRepository;
 import com.ajousw.spring.domain.timetable.everytime.EveryTimeApi;
 import com.ajousw.spring.domain.timetable.everytime.EveryTimeParser;
 import com.ajousw.spring.domain.timetable.parser.TableInfo;
-import com.ajousw.spring.domain.timetable.repository.*;
+import com.ajousw.spring.domain.timetable.repository.Subject;
+import com.ajousw.spring.domain.timetable.repository.SubjectRepository;
+import com.ajousw.spring.domain.timetable.repository.TimeTable;
+import com.ajousw.spring.domain.timetable.repository.TimeTableRepository;
+import com.ajousw.spring.domain.timetable.repository.TimeTableSubject;
+import com.ajousw.spring.domain.timetable.repository.TimeTableSubjectRepository;
 import com.ajousw.spring.web.controller.dto.timetable.SubjectDto;
 import com.ajousw.spring.web.controller.dto.timetable.SubjectTimeDto;
 import com.ajousw.spring.web.controller.dto.timetable.TimeTableDto;
 import jakarta.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,63 +34,105 @@ public class TimeTableService {
     private final MemberRepository memberRepository;
     private final TimeTableRepository timeTableRepository;
     private final SubjectRepository subjectRepository;
-    private final SubjectTimeRepository subjectTimeRepository;
     private final TimeTableSubjectRepository timeTableSubjectRepository;
+
     private final EveryTimeApi everyTimeApi;
     private final EveryTimeParser everyTimeParser;
     private final EntityManager entityManager;
     private final AlarmSetter alarmSetter;
 
-    public void saveTimeTable(String identifier, String userEmail) {
-        Member member = findMemberByEmail(userEmail);
+    public void saveTimeTableAndSubject(String identifier, String userEmail) {
+        Member member = findMemberByEmailFetchTimeTable(userEmail);
 
-        deleteTimeTable(member);
+        deleteTimeTableAndSubject(member);
 
         TableInfo tableInfo = everyTimeApi.getTimeTable(identifier);
         TimeTable timeTable = everyTimeParser.getTimeTable(tableInfo, member);
         List<Subject> subjects = everyTimeParser.getSubject(tableInfo);
 
-        saveTimeTable(timeTable, subjects);
+        saveTimeTableAndSubject(timeTable, subjects);
         alarmSetter.createAlarmWithSubject(subjects, member);
     }
 
-    private void deleteTimeTable(Member member) {
+    public void deleteTimeTableAndSubject(String email) {
+        Member member = findMemberByEmailFetchTimeTable(email);
+        deleteTimeTableAndSubject(member);
+    }
+
+    private void saveTimeTableAndSubject(TimeTable newTimeTable, List<Subject> newSubjects) {
+        timeTableRepository.save(newTimeTable);
+
+        saveSubject(newSubjects);
+
+        newSubjects.forEach(subject -> {
+            timeTableSubjectRepository.save(new TimeTableSubject(newTimeTable, subject));
+        });
+    }
+
+    private void deleteTimeTableAndSubject(Member member) {
         TimeTable timeTable = member.getTimeTable();
         if (timeTable == null) {
             return;
         }
 
-        List<Subject> allSubjects = getSubjectsByTimeTable(timeTable);
-        List<SubjectTime> subjectTimes = new ArrayList<>();
-        for (Subject subject : allSubjects) {
-            subjectTimes.addAll(subject.getSubjectTimes());
-        }
-
-        subjectTimeRepository.deleteAllInBatch(subjectTimes);
         alarmSetter.deleteAlarmWithMember(member);
-        subjectRepository.deleteAllInBatch(allSubjects);
+        timeTableSubjectRepository.deleteAllByTimeTable(timeTable);
         timeTableRepository.delete(timeTable);
         entityManager.flush();
     }
 
-    private void saveTimeTable(TimeTable timeTable, List<Subject> subjects) {
-        timeTableRepository.save(timeTable);
-        subjectRepository.saveAll(subjects);
+    private void saveSubject(List<Subject> newSubjects) {
+        List<Long> newEveryTimeSubjectIds = newSubjects.stream()
+                .map(Subject::getEveryTimeSubjectId).toList();
+
+        Map<Long, Long> subjectIdInDb = subjectRepository.findAllByEveryTimeSubjectIdIs(newEveryTimeSubjectIds)
+                .stream().collect(Collectors.toMap(Subject::getEveryTimeSubjectId, Subject::getSubjectId));
+
+        List<Subject> subjectsToSave = new ArrayList<>();
+
+        for (Subject newSubject : newSubjects) {
+            Long subjectInDb = subjectIdInDb.get(newSubject.getEveryTimeSubjectId());
+            if (subjectInDb != null) {
+                newSubject.setSubjectId(subjectInDb);
+                continue;
+            }
+
+            subjectsToSave.add(newSubject);
+        }
+
+        subjectRepository.saveAll(subjectsToSave);
     }
 
     public TimeTableDto getTimeTable(String email) {
-        Member member = findMemberByEmail(email);
+        TimeTable timeTable = findMemberByEmailFetchTimeTable(email).getTimeTable();
 
-        if (member.getTimeTable() == null) {
+        if (timeTable == null) {
             throw new IllegalArgumentException(ErrorMessage.TIMETABLE_NOT_FOUND);
         }
 
-        return createDto(member.getTimeTable());
+        List<Long> subjectIds = timeTable.getSubjects()
+                .stream().map(TimeTableSubject::getSubject)
+                .map(Subject::getSubjectId)
+                .toList();
+
+        List<Subject> subjects = subjectRepository.findAllBySubjectIdIsFetchSubjectTime(subjectIds);
+
+        return createDto(timeTable, subjects);
     }
 
-    public void deleteTimeTable(String email) {
+    public TimeTableDto getTimeTableWithNoFetch(String email) {
         Member member = findMemberByEmail(email);
-        deleteTimeTable(member);
+        TimeTable timeTable = member.getTimeTable();
+
+        if (timeTable == null) {
+            throw new IllegalArgumentException(ErrorMessage.TIMETABLE_NOT_FOUND);
+        }
+
+        List<Subject> subjects = timeTable.getSubjects().stream()
+                .map(TimeTableSubject::getSubject)
+                .toList();
+
+        return createDto(timeTable, subjects);
     }
 
     private Member findMemberByEmail(String userEmail) {
@@ -93,20 +140,13 @@ public class TimeTableService {
                 new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
     }
 
-    private List<Subject> getSubjectsByTimeTable(TimeTable timeTable) {
-        List<TimeTableSubject> timeTableSubjects = timeTableSubjectRepository.findAllByTimeTable(timeTable);
-        List<Long> subjects = timeTableSubjects.stream()
-                .map(TimeTableSubject::getSubject)
-                .map(Subject::getSubjectId)
-                .toList();
-
-        return subjectRepository.findAllBySubjectIdIs(subjects);
+    private Member findMemberByEmailFetchTimeTable(String userEmail) {
+        return memberRepository.findByEmailFetchTimeTable(userEmail).orElseThrow(() ->
+                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
     }
 
-    private TimeTableDto createDto(TimeTable timeTableEntity) {
-        List<Subject> subjectList = getSubjectsByTimeTable(timeTableEntity);
-
-        List<SubjectDto> subjectDtoList = subjectList.stream()
+    private TimeTableDto createDto(TimeTable timeTable, List<Subject> subjects) {
+        List<SubjectDto> subjectDtoList = subjects.stream()
                 .map(subject -> new SubjectDto(
                         subject.getSubjectId(),
                         subject.getEveryTimeSubjectId(),
@@ -125,11 +165,11 @@ public class TimeTableService {
                 )).collect(Collectors.toList());
 
         return TimeTableDto.builder()
-                .tableId(timeTableEntity.getTableId())
-                .memberId(timeTableEntity.getMember().getId())
-                .year(timeTableEntity.getYear())
-                .semester(timeTableEntity.getSemester())
-                .identifier(timeTableEntity.getIdentifier())
+                .tableId(timeTable.getTableId())
+                .memberId(timeTable.getMember().getId())
+                .year(timeTable.getYear())
+                .semester(timeTable.getSemester())
+                .identifier(timeTable.getIdentifier())
                 .subjectList(subjectDtoList)
                 .build();
     }

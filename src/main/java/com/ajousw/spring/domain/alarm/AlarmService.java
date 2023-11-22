@@ -7,19 +7,20 @@ import com.ajousw.spring.domain.member.repository.Member;
 import com.ajousw.spring.domain.member.repository.MemberRepository;
 import com.ajousw.spring.domain.timetable.repository.Subject;
 import com.ajousw.spring.domain.timetable.repository.SubjectRepository;
+import com.ajousw.spring.domain.timetable.repository.TimeTableSubject;
+import com.ajousw.spring.domain.timetable.repository.TimeTableSubjectRepository;
 import com.ajousw.spring.web.controller.dto.alarm.AlarmCreateDto;
 import com.ajousw.spring.web.controller.dto.alarm.AlarmDeleteDto;
 import com.ajousw.spring.web.controller.dto.alarm.AlarmDto;
 import com.ajousw.spring.web.controller.dto.alarm.AlarmUpdateDto;
 import com.ajousw.spring.web.controller.dto.timetable.SubjectDto;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,10 +30,10 @@ public class AlarmService {
     private final AlarmRepository alarmRepository;
     private final SubjectRepository subjectRepository;
     private final MemberRepository memberRepository;
+    private final TimeTableSubjectRepository timeTableSubjectRepository;
 
-    public void save(AlarmCreateDto alarmCreateDto, String email) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
-                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
+    public void createNewSubject(AlarmCreateDto alarmCreateDto, String email) {
+        Member member = findByMemberFetchTimeTable(email);
 
         if (member.getTimeTable() == null) {
             throw new IllegalStateException(ErrorMessage.TIMETABLE_NOT_FOUND);
@@ -66,13 +67,15 @@ public class AlarmService {
 
     private void saveWithNewSubject(AlarmCreateDto alarmCreateDto, Member member) {
         Subject customSubject = Subject.builder()
-                .everyTimeSubjectId(0L)
+                .everyTimeSubjectId(-1L)
                 .code("CUSTOM_SUBJECT")
                 .name(alarmCreateDto.getName())
                 .professor(member.getEmail())
                 .build();
-
         subjectRepository.save(customSubject);
+
+        TimeTableSubject timeTableSubject = new TimeTableSubject(member.getTimeTable(), customSubject);
+        timeTableSubjectRepository.save(timeTableSubject);
 
         Alarm newAlarm = Alarm.builder()
                 .member(member)
@@ -83,7 +86,6 @@ public class AlarmService {
                 .alarmGap(alarmCreateDto.getAlarmGap())
                 .isAlarmOn(alarmCreateDto.getIsAlarmOn())
                 .build();
-
         alarmRepository.save(newAlarm);
     }
 
@@ -111,6 +113,7 @@ public class AlarmService {
         alarm.setAlarmGap(alarmModifyDto.getAlarmGap());
     }
 
+    // TODO: 커스텀 subject 로직 결정
     public void deleteAlarm(AlarmDeleteDto alarmDeleteDto, String email) {
         Alarm alarm = alarmRepository.findByIdFetch(alarmDeleteDto.getAlarmId()).orElseThrow(() ->
                 new IllegalArgumentException(ErrorMessage.ALARM_NOT_FOUND));
@@ -121,14 +124,23 @@ public class AlarmService {
     }
 
     private void checkOwner(String email, Alarm alarm) {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() ->
-                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
+        Member member = findByMemberFetchTimeTable(email);
 
         if (!Objects.equals(alarm.getMember().getId(), member.getId())) {
             throw new IllegalArgumentException(ErrorMessage.NOT_OWNER);
         }
     }
 
+    private Member findByMemberFetchTimeTable(String email) {
+        return memberRepository.findByEmailFetchTimeTable(email).orElseThrow(() ->
+                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
+    }
+
+    // TODO: 양방향 매핑 필요한지 체크 후 수정
+    private Member findByMember(String email) {
+        return memberRepository.findByEmail(email).orElseThrow(() ->
+                new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
+    }
 
     private AlarmDto getAlarmSubjectDto(Alarm alarm) {
         Subject subject = alarm.getSubject();

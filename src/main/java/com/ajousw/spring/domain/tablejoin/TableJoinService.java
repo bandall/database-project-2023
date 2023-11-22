@@ -1,27 +1,34 @@
 package com.ajousw.spring.domain.tablejoin;
 
+import com.ajousw.spring.domain.ErrorMessage;
 import com.ajousw.spring.domain.member.repository.Member;
 import com.ajousw.spring.domain.member.repository.MemberRepository;
-import com.ajousw.spring.domain.timetable.repository.*;
+import com.ajousw.spring.domain.timetable.repository.Subject;
+import com.ajousw.spring.domain.timetable.repository.SubjectRepository;
+import com.ajousw.spring.domain.timetable.repository.TimeTable;
+import com.ajousw.spring.domain.timetable.repository.TimeTableSubject;
 import com.ajousw.spring.web.controller.dto.timetable.CommonEmptyTimeDto;
-import jakarta.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class TableJoinService {
 
     public static final int DAY_OF_WEEK = 7;
     public static final int MAX_DAY_TIME = 289;
+    private static final String TIME_FORMAT = "빈 시간대: %02d:%02d ~ %02d:%02d";
     private final SubjectRepository subjectRepository;
     private final MemberRepository memberRepository;
-    private final TimeTableSubjectRepository timeTableSubjectRepository;
 
     public Map<Day, List<String>> findCommonEmptyTime(CommonEmptyTimeDto commonEmptyTimeDto) {
         List<Member> members = getMembers(commonEmptyTimeDto.getEmails());
@@ -40,9 +47,8 @@ public class TableJoinService {
     }
 
     private Member getMemberByEmail(String email) {
-        return memberRepository.findByEmail(email).orElseThrow(
-                () -> new IllegalArgumentException("존재하지 않는 유저입니다. " + email)
-        );
+        return memberRepository.findByEmailFetchTimeTable(email)
+                .orElseThrow(() -> new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND + " " + email));
     }
 
     private void setEmptyTime(byte[][] emptyTimeTable, Member member) {
@@ -61,13 +67,12 @@ public class TableJoinService {
     }
 
     private List<Subject> getSubjectsByTimeTable(TimeTable timeTable) {
-        List<TimeTableSubject> timeTableSubjects = timeTableSubjectRepository.findAllByTimeTable(timeTable);
-        List<Long> subjects = timeTableSubjects.stream()
-                .map(TimeTableSubject::getSubject)
+        List<Long> subjectIds = timeTable.getSubjects()
+                .stream().map(TimeTableSubject::getSubject)
                 .map(Subject::getSubjectId)
                 .toList();
 
-        return subjectRepository.findAllBySubjectIdIs(subjects);
+        return subjectRepository.findAllBySubjectIdIsFetchSubjectTime(subjectIds);
     }
 
     private void setBusyTime(int day, int startTime, int endTime, byte[][] emptyTimeTable) {
@@ -103,7 +108,7 @@ public class TableJoinService {
 
                 int timeDiff = ((hoursEnd * 60 + minutesEnd) - (hoursStart * 60 + minutesStart));
                 if (timeDiff >= commonEmptyTimeDto.getMinTimeDiff()) {
-                    String formattedTime = String.format("빈 시간대: %02d:%02d ~ %02d:%02d", hoursStart, minutesStart,
+                    String formattedTime = String.format(TIME_FORMAT, hoursStart, minutesStart,
                             hoursEnd,
                             minutesEnd);
                     emptyTime.add(formattedTime);

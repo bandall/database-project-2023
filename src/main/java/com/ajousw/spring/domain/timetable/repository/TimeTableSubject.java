@@ -1,8 +1,14 @@
 package com.ajousw.spring.domain.timetable.repository;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,14 +23,15 @@ public class TimeTableSubject {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id")
     private Subject subject;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "table_id")
     private TimeTable timeTable;
 
-    @Builder
-    public TimeTableSubject(Subject subject, TimeTable timeTable) {
-        this.subject = subject;
+    public TimeTableSubject(TimeTable timeTable, Subject subject) {
         this.timeTable = timeTable;
+        this.subject = subject;
     }
 }

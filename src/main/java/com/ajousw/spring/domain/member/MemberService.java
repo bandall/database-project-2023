@@ -13,7 +13,6 @@ public class MemberService {
     private final MemberRepository memberJpaRepository;
 
     public Member getMember(String email) {
-        Member member = memberJpaRepository.findByEmail(email).orElseThrow();
-        return member;
+        return memberJpaRepository.findByEmail(email).orElseThrow();
     }
 }

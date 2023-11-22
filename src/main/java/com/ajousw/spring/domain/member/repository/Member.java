@@ -52,7 +52,7 @@ public class Member extends BaseTimeEntity {
     @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
     private TimeTable timeTable;
 
-    @OneToMany(mappedBy = "member")
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
     private List<Alarm> alarmList = new ArrayList<>();
 
 }

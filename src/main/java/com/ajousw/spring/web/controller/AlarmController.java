@@ -31,7 +31,7 @@ public class AlarmController {
                                      @AuthenticationPrincipal UserPrinciple user) {
         log.info("[ALARM-CREATE] : <{}>", createDto);
 
-        alarmService.save(createDto, user.getEmail());
+        alarmService.createNewSubject(createDto, user.getEmail());
 
         log.info("[SUCCESS]");
         return new ApiResponseJson(HttpStatus.OK, "OK");
