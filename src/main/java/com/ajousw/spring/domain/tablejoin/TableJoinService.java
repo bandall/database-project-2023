@@ -2,8 +2,7 @@ package com.ajousw.spring.domain.tablejoin;
 
 import com.ajousw.spring.domain.member.repository.Member;
 import com.ajousw.spring.domain.member.repository.MemberRepository;
-import com.ajousw.spring.domain.timetable.repository.Subject;
-import com.ajousw.spring.domain.timetable.repository.SubjectRepository;
+import com.ajousw.spring.domain.timetable.repository.*;
 import com.ajousw.spring.web.controller.dto.timetable.CommonEmptyTimeDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +21,7 @@ public class TableJoinService {
     public static final int MAX_DAY_TIME = 289;
     private final SubjectRepository subjectRepository;
     private final MemberRepository memberRepository;
+    private final TimeTableSubjectRepository timeTableSubjectRepository;
 
     public Map<Day, List<String>> findCommonEmptyTime(CommonEmptyTimeDto commonEmptyTimeDto) {
         List<Member> members = getMembers(commonEmptyTimeDto.getEmails());
@@ -56,9 +56,18 @@ public class TableJoinService {
     }
 
     private List<Subject> getSubjects(Member member) {
-        List<Subject> subjects = subjectRepository.findAllByTimeTableFetchSubjectTimes(
-                member.getTimeTable());
+        List<Subject> subjects = getSubjectsByTimeTable(member.getTimeTable());
         return subjects == null ? Collections.emptyList() : subjects;
+    }
+
+    private List<Subject> getSubjectsByTimeTable(TimeTable timeTable) {
+        List<TimeTableSubject> timeTableSubjects = timeTableSubjectRepository.findAllByTimeTable(timeTable);
+        List<Long> subjects = timeTableSubjects.stream()
+                .map(TimeTableSubject::getSubject)
+                .map(Subject::getSubjectId)
+                .toList();
+
+        return subjectRepository.findAllBySubjectIdIs(subjects);
     }
 
     private void setBusyTime(int day, int startTime, int endTime, byte[][] emptyTimeTable) {

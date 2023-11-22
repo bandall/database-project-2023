@@ -30,6 +30,7 @@ public class TimeTableService {
     private final TimeTableRepository timeTableRepository;
     private final SubjectRepository subjectRepository;
     private final SubjectTimeRepository subjectTimeRepository;
+    private final TimeTableSubjectRepository timeTableSubjectRepository;
     private final EveryTimeApi everyTimeApi;
     private final EveryTimeParser everyTimeParser;
     private final EntityManager entityManager;
@@ -42,7 +43,7 @@ public class TimeTableService {
 
         TableInfo tableInfo = everyTimeApi.getTimeTable(identifier);
         TimeTable timeTable = everyTimeParser.getTimeTable(tableInfo, member);
-        List<Subject> subjects = everyTimeParser.getSubject(tableInfo, timeTable);
+        List<Subject> subjects = everyTimeParser.getSubject(tableInfo);
 
         saveTimeTable(timeTable, subjects);
         alarmSetter.createAlarmWithSubject(subjects, member);
@@ -54,8 +55,8 @@ public class TimeTableService {
             return;
         }
 
+        List<Subject> allSubjects = getSubjectsByTimeTable(timeTable);
         List<SubjectTime> subjectTimes = new ArrayList<>();
-        List<Subject> allSubjects = subjectRepository.findAllByTimeTableFetchSubjectTimes(timeTable);
         for (Subject subject : allSubjects) {
             subjectTimes.addAll(subject.getSubjectTimes());
         }
@@ -92,8 +93,18 @@ public class TimeTableService {
                 new IllegalArgumentException(ErrorMessage.MEMBER_NOT_FOUND));
     }
 
+    private List<Subject> getSubjectsByTimeTable(TimeTable timeTable) {
+        List<TimeTableSubject> timeTableSubjects = timeTableSubjectRepository.findAllByTimeTable(timeTable);
+        List<Long> subjects = timeTableSubjects.stream()
+                .map(TimeTableSubject::getSubject)
+                .map(Subject::getSubjectId)
+                .toList();
+
+        return subjectRepository.findAllBySubjectIdIs(subjects);
+    }
+
     private TimeTableDto createDto(TimeTable timeTableEntity) {
-        List<Subject> subjectList = subjectRepository.findAllByTimeTableFetchSubjectTimes(timeTableEntity);
+        List<Subject> subjectList = getSubjectsByTimeTable(timeTableEntity);
 
         List<SubjectDto> subjectDtoList = subjectList.stream()
                 .map(subject -> new SubjectDto(
@@ -102,7 +113,6 @@ public class TimeTableService {
                         subject.getCode(),
                         subject.getName(),
                         subject.getProfessor(),
-                        timeTableEntity.getTableId(),
                         subject.getSubjectTimes().stream()
                                 .map(subjectTime -> new SubjectTimeDto(
                                         subjectTime.getId(),

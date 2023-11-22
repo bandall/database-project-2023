@@ -43,18 +43,17 @@ public class EveryTimeParser {
                 .build();
     }
 
-    public List<Subject> getSubject(TableInfo tableInfo, TimeTable timeTable) {
+    public List<Subject> getSubject(TableInfo tableInfo) {
         TableParse parsedTable = tableInfo.getTables().get(0);
         List<SubjectParse> subjectParses = parsedTable.getSubjects();
 
         return subjectParses.stream()
-                .map(s -> setSubject(s, timeTable))
+                .map(this::setSubject)
                 .toList();
     }
 
-    private Subject setSubject(SubjectParse subjectParse, TimeTable timeTable) {
+    private Subject setSubject(SubjectParse subjectParse) {
         Subject subject = Subject.builder()
-                .timeTable(timeTable)
                 .everyTimeSubjectId(subjectParse.getId())
                 .name(subjectParse.getName())
                 .code(subjectParse.getInternal())

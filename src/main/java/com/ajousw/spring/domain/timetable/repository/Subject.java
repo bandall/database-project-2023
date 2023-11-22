@@ -26,16 +26,14 @@ public class Subject {
 
     private String professor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "time_table_id")
-    private TimeTable timeTable;
+    @OneToMany(mappedBy = "subject")
+    private List<TimeTableSubject> timeTables = new ArrayList<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
     private List<SubjectTime> subjectTimes = new ArrayList<>();
 
     @Builder
-    public Subject(TimeTable timeTable, Long everyTimeSubjectId, String code, String name, String professor) {
-        this.timeTable = timeTable;
+    public Subject(Long everyTimeSubjectId, String code, String name, String professor) {
         this.everyTimeSubjectId = everyTimeSubjectId;
         this.code = code;
         this.name = name;

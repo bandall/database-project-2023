@@ -70,7 +70,6 @@ public class AlarmService {
                 .code("CUSTOM_SUBJECT")
                 .name(alarmCreateDto.getName())
                 .professor(member.getEmail())
-                .timeTable(member.getTimeTable())
                 .build();
 
         subjectRepository.save(customSubject);
@@ -147,7 +146,6 @@ public class AlarmService {
                         subject.getCode(),
                         subject.getName(),
                         subject.getProfessor(),
-                        subject.getTimeTable().getTableId(),
                         null)
         );
     }
