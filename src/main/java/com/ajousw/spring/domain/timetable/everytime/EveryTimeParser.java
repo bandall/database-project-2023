@@ -9,11 +9,12 @@ import com.ajousw.spring.domain.timetable.repository.Subject;
 import com.ajousw.spring.domain.timetable.repository.SubjectTime;
 import com.ajousw.spring.domain.timetable.repository.TimeTable;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import java.io.IOException;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.List;
 
 
 @Slf4j
@@ -24,8 +25,7 @@ public class EveryTimeParser {
 
     public TableInfo parseTimeTable(String xml) {
         try {
-            TableInfo tableInfo = xmlMapper.readValue(xml, TableInfo.class);
-            return tableInfo;
+            return xmlMapper.readValue(xml, TableInfo.class);
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalArgumentException();
@@ -55,7 +55,7 @@ public class EveryTimeParser {
     private Subject setSubject(SubjectParse subjectParse, TimeTable timeTable) {
         Subject subject = Subject.builder()
                 .timeTable(timeTable)
-                .subjectRealId(subjectParse.getId())
+                .everyTimeSubjectId(subjectParse.getId())
                 .name(subjectParse.getName())
                 .code(subjectParse.getInternal())
                 .professor(subjectParse.getProfessor())
