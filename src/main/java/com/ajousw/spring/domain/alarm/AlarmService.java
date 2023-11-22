@@ -89,6 +89,7 @@ public class AlarmService {
         alarmRepository.save(newAlarm);
     }
 
+    @Transactional(readOnly = true)
     public List<AlarmDto> getAllAlarmByEmail(String email) {
         List<Alarm> alarm = alarmRepository.findByMemberEmailFetch(email);
 
@@ -113,7 +114,7 @@ public class AlarmService {
         alarm.setAlarmGap(alarmModifyDto.getAlarmGap());
     }
 
-    // TODO: 커스텀 subject 로직 결정
+    // TODO: 커스텀 subject의 경우 알람을 삭제할 때 같이 삭제할 것인지 결정
     public void deleteAlarm(AlarmDeleteDto alarmDeleteDto, String email) {
         Alarm alarm = alarmRepository.findByIdFetch(alarmDeleteDto.getAlarmId()).orElseThrow(() ->
                 new IllegalArgumentException(ErrorMessage.ALARM_NOT_FOUND));

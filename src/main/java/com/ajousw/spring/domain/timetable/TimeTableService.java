@@ -103,6 +103,7 @@ public class TimeTableService {
         subjectRepository.saveAll(subjectsToSave);
     }
 
+    @Transactional(readOnly = true)
     public TimeTableDto getTimeTable(String email) {
         TimeTable timeTable = findMemberByEmailFetchTimeTable(email).getTimeTable();
 
@@ -120,6 +121,7 @@ public class TimeTableService {
         return createDto(timeTable, subjects);
     }
 
+    @Transactional(readOnly = true)
     public TimeTableDto getTimeTableWithNoFetch(String email) {
         Member member = findMemberByEmail(email);
         TimeTable timeTable = member.getTimeTable();
