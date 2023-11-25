@@ -62,6 +62,10 @@ public class TableJoinService {
     }
 
     private List<Subject> getSubjects(Member member) {
+        if (member.getTimeTable() == null) {
+            return Collections.emptyList();
+        }
+
         List<Subject> subjects = getSubjectsByTimeTable(member.getTimeTable());
         return subjects == null ? Collections.emptyList() : subjects;
     }
