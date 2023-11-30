@@ -16,6 +16,6 @@ public class RedisAccessTokenBlackListRepository {
     }
 
     public boolean isKeyBlackList(String key) {
-        return redisBlackListTemplate.hasKey(key);
+        return Boolean.TRUE.equals(redisBlackListTemplate.hasKey(key));
     }
 }

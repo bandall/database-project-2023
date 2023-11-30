@@ -1,6 +1,5 @@
 package com.ajousw.spring.web.controller.json;
 
-import com.ajousw.spring.domain.auth.jwt.token.TokenStatusCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -22,7 +21,7 @@ public class ApiResponseJson {
 
     public ApiResponseJson(HttpStatus httpStatus, Object data) {
         this.httpStatus = httpStatus;
-        this.code = TokenStatusCode.OK;
+        this.code = ResponseStatusCode.OK;
         this.data = data;
     }
 }

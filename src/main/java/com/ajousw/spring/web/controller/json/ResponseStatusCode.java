@@ -1,6 +1,6 @@
-package com.ajousw.spring.domain.auth.jwt.token;
+package com.ajousw.spring.web.controller.json;
 
-public final class TokenStatusCode {
+public final class ResponseStatusCode {
     public static final int OK = 200;
     public static final int URL_NOT_FOUND = 404;
     public static final int EMAIL_NOT_VERIFIED = 410;
@@ -15,6 +15,6 @@ public final class TokenStatusCode {
     public static final int NO_AUTH_HEADER = 4015;
     public static final int TOKEN_VALIDATION_TRY_FAILED = 4016;
 
-    private TokenStatusCode() {
+    private ResponseStatusCode() {
     }
 }

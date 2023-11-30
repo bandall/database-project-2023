@@ -31,7 +31,6 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final String[] adminUrl = {"/admin/**"};
     private final String[] permitAllUrl = {"/error"};
-    private final String[] anonymousUrl = {""};
     @Value("${verification.encoder-strength}")
     private int encoderStrength;
 
@@ -51,7 +50,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(adminUrl).hasRole("ADMIN")
                         .requestMatchers(permitAllUrl).permitAll()
-                        .requestMatchers(anonymousUrl).anonymous()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
