@@ -3,7 +3,7 @@
 </div>
 
 <div align="center">
-    아주대 전자출결 도우미 
+    아주대 전자출결 도우미 스프링 서버
     <br><br>
     <a href="https://github.com/bandall/database-project-2023" target="_blank">
         <img src="https://img.shields.io/badge/spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Backend Spring Server - View Project">
