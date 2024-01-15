@@ -111,8 +111,8 @@ public class TimeTableService {
             throw new IllegalArgumentException(ErrorMessage.TIMETABLE_NOT_FOUND);
         }
 
-        List<Long> subjectIds = timeTable.getSubjects()
-                .stream().map(TimeTableSubject::getSubject)
+        List<Long> subjectIds = timeTable.getSubjects().stream()
+                .map(TimeTableSubject::getSubject)
                 .map(Subject::getSubjectId)
                 .toList();
 
@@ -120,6 +120,7 @@ public class TimeTableService {
 
         return createDto(timeTable, subjects);
     }
+    
 
     @Transactional(readOnly = true)
     public TimeTableDto getTimeTableWithNoFetch(String email) {

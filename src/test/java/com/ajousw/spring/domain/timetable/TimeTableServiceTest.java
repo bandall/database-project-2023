@@ -1,5 +1,9 @@
 package com.ajousw.spring.domain.timetable;
 
+import com.ajousw.spring.domain.member.repository.Member;
+import com.ajousw.spring.domain.member.repository.MemberRepository;
+import jakarta.persistence.EntityManager;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,23 +17,68 @@ class TimeTableServiceTest {
     @Autowired
     private TimeTableService timeTableService;
 
+    @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    private int maxTest = 30;
+
     @Test
     @Transactional
     public void getTimeTableWithNoFetch() {
-        String email = "jsm5315@gmail.com";
+        List<Member> allMember = memberRepository.findAll();
+        int curCount = 0;
 
-        log.info("[QUERY START]");
-        timeTableService.getTimeTableWithNoFetch(email);
-        log.info("[QUERY END]");
+        long startTime = System.currentTimeMillis();
+        for (Member m : allMember) {
+//            log.info("[QUERY START]");
+            if (m.getTimeTable() == null) {
+                continue;
+            }
+            timeTableService.getTimeTableWithNoFetch(m.getEmail());
+//            log.info("[QUERY END]");
+            entityManager.clear();
+
+            curCount++;
+            if (curCount >= maxTest) {
+                break;
+            }
+        }
+        long endTime = System.currentTimeMillis();
+        log.info("TIME => {}ms", endTime - startTime);
+
+        entityManager.clear();
+        entityManager.flush();
     }
 
     @Test
+    @Transactional
     public void getTimeTableWithFetch() {
-        String email = "jsm5315@gmail.com";
+        List<Member> allMember = memberRepository.findAll();
+        int curCount = 0;
 
-        log.info("[QUERY START]");
-        timeTableService.getTimeTable(email);
-        log.info("[QUERY END]");
+        long startTime = System.currentTimeMillis();
+        for (Member m : allMember) {
+//            log.info("[QUERY START]");
+            if (m.getTimeTable() == null) {
+                continue;
+            }
+            timeTableService.getTimeTable(m.getEmail());
+//            log.info("[QUERY END]");
+            entityManager.clear();
+
+            curCount++;
+            if (curCount >= maxTest) {
+                break;
+            }
+        }
+        long endTime = System.currentTimeMillis();
+        log.info("TIME => {}ms", endTime - startTime);
+
+        entityManager.clear();
+        entityManager.flush();
     }
 
 }

@@ -16,6 +16,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -44,8 +45,7 @@ public class Member extends BaseTimeEntity {
     @Column(length = 255)
     private String profileImageUri;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    private String roles;
 
     private LocalDateTime lastLoginTime;
 
@@ -55,4 +55,10 @@ public class Member extends BaseTimeEntity {
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
     private List<Alarm> alarmList = new ArrayList<>();
 
+    public boolean hasRole(Role role) {
+        List<String> parsedRoles = Arrays.stream(roles.split(",")).toList();
+
+        return parsedRoles.contains(role.getRoleName());
+    }
+    
 }
